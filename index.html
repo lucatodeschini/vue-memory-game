@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vue Memory Game</title>
+  <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+  <style>
+    body {
+      font-family: 'Arial', sans-serif;
+      text-align: center;
+      background-color: #f0f0f0;
+    }
+    .game-container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    .game-board {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      margin: 20px auto;
+      max-width: 600px;
+    }
+    .card {
+      background-color: #4285f4;
+      color: white;
+      height: 100px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 24px;
+      border-radius: 5px;
+      cursor: pointer;
+      user-select: none;
+    }
+    .card.flipped {
+      background-color: #34a853;
+    }
+    .controls {
+      margin: 20px 0;
+    }
+    .moves {
+      font-size: 18px;
+      margin: 10px 0;
+    }
+    button {
+      background-color: #4285f4;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      font-size: 16px;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <div class="game-container">
+      <h1>Memory Game</h1>
+      <div class="moves">Moves: {{ moves }}</div>
+      <div class="game-board">
+        <div v-for="(card, index) in board" 
+             :key="index" 
+             class="card" 
+             :class="{ flipped: card.flipped }"
+             @click="flipCard(card, index)">
+          {{ card.flipped ? card.value : '' }}
+        </div>
+      </div>
+      <div class="controls">
+        <button @click="resetGame">Reset Game</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { createApp, ref, reactive } from 'https://unpkg.com/vue@3/dist/vue.esm-browser.js'
+
+    createApp({
+      setup() {
+        const cards = [1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8];
+        const board = ref([]);
+        const moves = ref(0);
+        const flippedCards = ref([]);
+        const matchedPairs = ref(0);
+
+        const initializeBoard = () => {
+          // Reset game state
+          moves.value = 0;
+          flippedCards.value = [];
+          matchedPairs.value = 0;
+          
+          // Create and shuffle the board
+          board.value = [];
+          const shuffledCards = [...cards];
+          for (let i = shuffledCards.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [shuffledCards[i], shuffledCards[j]] = [shuffledCards[j], shuffledCards[i]];
+          }
+          
+          board.value = shuffledCards.map((value, index) => ({
+            value: value,
+            flipped: false,
+            matched: false,
+            id: index
+          }));
+        };
+
+        const flipCard = (card, index) => {
+          // Don't allow flipping if card is already flipped or matched
+          if (card.flipped || card.matched || flippedCards.value.length >= 2) {
+            return;
+          }
+          
+          // Flip the card
+          card.flipped = true;
+          flippedCards.value.push({ card, index });
+          moves.value++;
+          
+          // Check for match when two cards are flipped
+          if (flippedCards.value.length === 2) {
+            const [firstCard, secondCard] = flippedCards.value.map(item => item.card);
+            
+            if (firstCard.value === secondCard.value) {
+              // Match found
+              firstCard.matched = true;
+              secondCard.matched = true;
+              matchedPairs.value++;
+              flippedCards.value = [];
+              
+              // Check for win
+              if (matchedPairs.value === 8) {
+                setTimeout(() => {
+                  alert(`You won in ${moves.value} moves!`);
+                }, 500);
+              }
+            } else {
+              // No match, flip cards back after delay
+              setTimeout(() => {
+                firstCard.flipped = false;
+                secondCard.flipped = false;
+                flippedCards.value = [];
+              }, 1000);
+            }
+          }
+        };
+
+        const resetGame = () => {
+          initializeBoard();
+        };
+
+        // Initialize the game
+        initializeBoard();
+
+        // Expose to template
+        return {
+          board,
+          moves,
+          flipCard,
+          resetGame
+        };
+      }
+    }).mount('#app');
+  </script>
+</body>
+</html>
