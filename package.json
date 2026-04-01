@@ -10,7 +10,7 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "description": "",
+  "description": "A Vue.js memory game deployed to GitHub Pages",
   "dependencies": {
     "vue": "^3.5.31"
   }
